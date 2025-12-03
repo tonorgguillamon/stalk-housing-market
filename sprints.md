@@ -1,0 +1,9 @@
+- Modeling classes
+- Design Idealista API calls.
+- Design Agent 1 -> Orchestrator -> tools to make API calls
+- Design Agent 2 -> summarization, classification, highlights, scoring
+- Design Agent 3 -> tools for Web Searches
+- Model data coming from Agent 3
+- Intertwine pipeline from Idealista and Agent 3 to be injected into Agent 2
+- Design DB (PostgreSQL) and operations
+- Design UI for the user to interact

@@ -1,58 +1,52 @@
-from langchain_openai import ChatOpenAI
-from langchain.agents import create_agent
-from langchain_core.messages import HumanMessage
-from langchain_core.tools import StructuredTool
+from typing import TypedDict, List
+import src.tools.exploration as exploration
+from src.agents.llm_roles import LLM_Researcher
 from src.prompts import AGENT_RESEARCHER
-import tools.exploration as exploration
-from pydantic import BaseModel, Field
+from langchain_core.messages import AnyMessage, SystemMessage,ToolMessage, AIMessage
 
 # https://medium.com/pythoneers/building-ai-agent-systems-with-langgraph-9d85537a6326
 
-class ResearcherInvocationInput(BaseModel):
-    query: str = Field(
-        ...,
-        description=(
-            "A precise location to research (e.g., 'Malasaña district, Madrid'). "
-            "This should be specific enough to support socioeconomic, tourism, "
-            "quality-of-life, and taxation analysis."
+TOOLS = {
+    "search_tourism_revenue": exploration.search_tourism_revenue_tool,
+    "search_local_taxes_regulations": exploration.search_local_taxes_regulations_tool,
+    "search_quality_of_life": exploration.search_quality_of_life_tool,
+    "search_socioeconomic_indexes": exploration.search_socioeconomic_indexes_tool,
+}
+
+class ResearcherState(TypedDict):
+    messages: List[AnyMessage] # AnyMessage is a union type: SystemMessage, HumanMessage, AIMessage, ToolMessage
+
+def inject_researcher_prompt(state: ResearcherState):
+    return {
+        "messages": [
+            SystemMessage(content=AGENT_RESEARCHER)
+        ] + state["messages"]
+    }
+
+def invoke_researcher_llm_node(state: ResearcherState):
+    response = LLM_Researcher.invoke(state["messages"])
+    print(state["messages"])
+    return {"messages": state["messages"] + [response]}
+
+def invoke_researcher_tool_node(state: ResearcherState):
+    last = state["messages"][-1]
+    tool_messages = []
+
+    if not isinstance(last, AIMessage):
+        return state
+
+    if not last.tool_calls:
+        return state
+
+    for call in last.tool_calls:
+        tool_instance = TOOLS[call["name"]]
+        result = tool_instance.invoke(call["args"])
+
+        tool_messages.append(
+            ToolMessage(
+                content=str(result),
+                tool_call_id=call["id"]
+            )
         )
-    )
 
-search_tools = [
-    exploration.search_tourism_revenue_tool,
-    exploration.search_local_taxes_regulations_tool,
-    exploration.search_quality_of_life_tool,
-    exploration.search_socioeconomic_indexes_tool
-]
-
-agent_researcher = create_agent( # Thought -> Action -> Observation and iterates
-    model=ChatOpenAI(model="gpt-4o-mini", temperature=0),
-    tools=search_tools,
-    system_prompt=AGENT_RESEARCHER
-)
-
-def invoke_researcher(query: str):
-    result = agent_researcher.invoke(
-        {"messages": [HumanMessage(content=query)]}
-    )
-
-    # Forward only the final message content
-    return result[-1].content
-
-invoke_researcher_tool = StructuredTool(
-    name="invoke_researcher",
-    func=invoke_researcher,
-    args_schema=ResearcherInvocationInput,
-    description=(
-        "Delegates comprehensive, multi-domain property research to the Researcher Agent.\n\n"
-        "Use this tool when analysis requires external knowledge or context not present in the "
-        "local property dataset.\n\n"
-        "The Researcher Agent performs the following on your behalf:\n"
-        "1. Socioeconomic index searches (crime, unemployment, income, population density)\n"
-        "2. Local taxes and municipal fee research (IBI, waste management, tourist fees)\n"
-        "3. Quality-of-life and sentiment analysis (schools, noise complaints, vibe)\n"
-        "4. Tourism market benchmarks (occupancy, ADR, rental density)\n\n"
-        "Input must be a precise location such as a neighborhood, district, or small geographic unit. "
-        "Returns a consolidated string with all structured raw research results."
-    ),
-)
+    return {"messages": state["messages"] + tool_messages}

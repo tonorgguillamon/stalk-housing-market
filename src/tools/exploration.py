@@ -2,6 +2,10 @@ from langchain_core.tools import tool, StructuredTool
 from pydantic import BaseModel, Field
 from langchain_tavily import TavilySearch
 
+'''
+https://docs.langchain.com/oss/python/integrations/chat/openai
+'''
+
 class QualityOfLifeInput(BaseModel):
     location: str = Field(
         ..., 

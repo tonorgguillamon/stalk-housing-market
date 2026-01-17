@@ -23,9 +23,8 @@ def inject_researcher_prompt(state: ResearcherState):
         ] + state["messages"]
     }
 
-def invoke_researcher_llm_node(state: ResearcherState):
-    response = LLM_Researcher.invoke(state["messages"])
-    print(state["messages"])
+async def invoke_researcher_llm_node(state: ResearcherState):
+    response = await LLM_Researcher.ainvoke(state["messages"])
     return {"messages": state["messages"] + [response]}
 
 def invoke_researcher_tool_node(state: ResearcherState):
@@ -40,6 +39,16 @@ def invoke_researcher_tool_node(state: ResearcherState):
 
     for call in last.tool_calls:
         tool_instance = TOOLS[call["name"]]
+        
+        if not tool_instance:
+            # unknown tool
+            tool_messages.append(
+                ToolMessage(
+                    content=f"Error: Unknown tool {call['name']}",
+                    tool_call_id=call["id"]
+                )
+            )
+            continue
         result = tool_instance.invoke(call["args"])
 
         tool_messages.append(

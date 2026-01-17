@@ -1,5 +1,7 @@
 from langchain_openai import ChatOpenAI
 import src.tools.exploration as exploration
+import src.tools.historical_extraction as historical_extraction
+
 
 LLM_Orchestrator = ChatOpenAI(
     model="gpt-4o-mini",
@@ -19,7 +21,11 @@ LLM_Researcher = ChatOpenAI(
 LLM_Data = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.2
-)
+).bind_tools([
+    historical_extraction.search_accommodations_tool,
+    historical_extraction.extract_price_distribution_tool,
+    historical_extraction.extract_accommodation_stats_tool
+])
 
 LLM_Analyst = ChatOpenAI(
     model="gpt-4o-mini",

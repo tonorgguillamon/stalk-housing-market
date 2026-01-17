@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, Literal, List, Tuple
 from datetime import date
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, String, Boolean, Float, Integer, Date
@@ -38,6 +38,31 @@ class Accommodation(Base):
 
     datePublication = Column(Date, nullable=True)
 
+class AccommodationOut(BaseModel):
+    country: Optional[str]
+    province: Optional[str]
+    munipality: Optional[str]
+    district: Optional[str]
+    neighborhood: Optional[str]
+
+    propertyType: Optional[str]
+
+    terrace: Optional[bool]
+    garage: Optional[bool]
+    hasLift: Optional[bool]
+    newDevelopment: Optional[bool]
+
+    price = Optional[Float]
+    pricePerM2 = Optional[Float]
+
+    rooms = Optional[int]
+    bathrooms = Optional[int]
+    size = Optional[int]
+
+    datePublication =  Optional[date]
+
+    model_config = ConfigDict(from_attributes=True)
+
 class SearchFilters(BaseModel):
     country: Optional[str]
     province: Optional[str]
@@ -61,3 +86,18 @@ class SearchFilters(BaseModel):
     published_after: Optional[date]
 
     limit: int = Field(20, ge=1, le=50)
+
+class StatsInputs(SearchFilters):
+    metric: Literal[
+        "count",
+        "avg_price",
+        "median_price",
+        "avg_price_per_m2",
+        "min_price",
+        "max_price",
+    ]
+
+
+class PriceDistributionInput(SearchFilters):
+    buckets: List[Tuple[float, float]]
+    group_by_neighborhood: bool = False

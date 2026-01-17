@@ -6,7 +6,7 @@ from src.database.models import Accommodation, SearchFilters
 # filters = SearchFilters(**agent_parameters)
 # results = await search_accommodations(async_session, filters)
 
-async def search_accommodations(
+async def get_accommodations(
     session: AsyncSession,
     filters: SearchFilters,
 ):
@@ -160,4 +160,3 @@ async def get_price_distribution(
         }
     else:
         return dict(rows[0]._mapping) if rows else {}
-

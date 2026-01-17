@@ -1,4 +1,4 @@
-from langchain_core.tools import tool, StructuredTool
+from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 from langchain_tavily import TavilySearch
 

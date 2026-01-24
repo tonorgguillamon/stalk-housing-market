@@ -14,18 +14,18 @@ TOOLS = {
 class DataExtractorState(TypedDict):
     messages: List[AnyMessage]
 
-def inject_researcher_prompt(state: DataExtractorState):
+def inject_data_extractor_prompt(state: DataExtractorState):
     return {
         "messages": [
             SystemMessage(content=AGENT_DATA_EXTRACTOR)
         ] + state["messages"]
     }
 
-async def invoke_researcher_llm_node(state: DataExtractorState):
+async def invoke_data_extractor_llm_node(state: DataExtractorState):
     response = await LLM_Data.ainvoke(state["messages"])
     return {"messages": state["messages"] + [response]}
 
-async def invoke_researcher_tool_node(state: DataExtractorState):
+async def invoke_data_extractor_tool_node(state: DataExtractorState):
     last = state["messages"][-1]
     tool_messages = []
 
@@ -48,7 +48,7 @@ async def invoke_researcher_tool_node(state: DataExtractorState):
             )
             continue
 
-        result = await tool_instance.invoke(call["args"])
+        result = await tool_instance.ainvoke(call["args"])
 
         tool_messages.append(
             ToolMessage(

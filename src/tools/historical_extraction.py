@@ -47,7 +47,6 @@ search_accommodations_tool = StructuredTool(
     ),
 )
 
-
 extract_accommodation_stats_tool = StructuredTool(
     name="get_accommodation_stats_tool",
     func=get_accommodation_stats_tool,
@@ -64,7 +63,6 @@ extract_accommodation_stats_tool = StructuredTool(
         "- 'Max price of houses in this area'"
     ),
 )
-
 
 extract_price_distribution_tool = StructuredTool(
     name="get_price_distribution_tool",

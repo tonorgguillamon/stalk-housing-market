@@ -120,7 +120,6 @@ async def get_accommodation_stats(
 
     return {metric: row[0]}
 
-
 async def get_price_distribution(
     session: AsyncSession,
     buckets: list[tuple[float, float]],

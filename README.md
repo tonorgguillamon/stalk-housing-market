@@ -19,3 +19,6 @@ Docker for deployment.
 
 ## Architecture
 ![diagram](docs/stalk-housing-market-architecture.png)
+
+## Design
+![desing](docs/stalk-housing-market-design.png)
